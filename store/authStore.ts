@@ -21,9 +21,11 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  hasHydrated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 const MOCK_USERS: Record<string, User & { password: string }> = {
@@ -80,6 +82,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      hasHydrated: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -109,9 +112,16 @@ export const useAuthStore = create<AuthState>()(
       clearError: () => {
         set({ error: null });
       },
+
+      setHasHydrated: (state: boolean) => {
+        set({ hasHydrated: state });
+      },
     }),
     {
       name: 'kpi-auth',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
