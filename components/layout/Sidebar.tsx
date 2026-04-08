@@ -1,16 +1,19 @@
 'use client';
 
-import { useAuthStore, useUIStore, Module } from '@/store';
+import { useAuthStore, useUIStore } from '@/store';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, Target, TrendingUp, Wallet, BarChart3, FileText, 
   Send, CheckCircle, ChevronLeft, ChevronRight, LogOut, User,
-  Settings, Users
+  Users
 } from 'lucide-react';
 import { classNames } from '@/lib/utils';
+import { useEffect } from 'react';
 
 interface NavItem {
-  id: Module;
+  id: string;
   label: string;
+  path: string;
   icon: React.ReactNode;
   roles: string[];
   badge?: number;
@@ -20,66 +23,83 @@ const navItems: NavItem[] = [
   {
     id: 'overview',
     label: 'Overview',
+    path: '/overview',
     icon: <LayoutDashboard className="w-5 h-5" />,
     roles: ['Admin', 'Franchisee', 'Manager', 'Executive'],
   },
   {
     id: 'targets',
     label: 'Target Setting',
+    path: '/targets',
     icon: <Target className="w-5 h-5" />,
     roles: ['Admin', 'Manager'],
   },
   {
     id: 'tracking',
     label: 'KPI Tracking',
+    path: '/tracking',
     icon: <TrendingUp className="w-5 h-5" />,
     roles: ['Admin', 'Franchisee', 'Manager', 'Executive'],
   },
   {
     id: 'incentives',
     label: 'Incentive Engine',
+    path: '/incentives',
     icon: <Wallet className="w-5 h-5" />,
     roles: ['Admin', 'Manager'],
   },
   {
     id: 'benchmarking',
     label: 'Benchmarking',
+    path: '/benchmarking',
     icon: <BarChart3 className="w-5 h-5" />,
     roles: ['Admin', 'Franchisee', 'Manager'],
   },
   {
     id: 'reports',
     label: 'Reports',
+    path: '/reports',
     icon: <FileText className="w-5 h-5" />,
     roles: ['Admin', 'Franchisee', 'Manager', 'Executive'],
   },
   {
     id: 'requests',
     label: 'My Requests',
+    path: '/requests',
     icon: <Send className="w-5 h-5" />,
     roles: ['Manager'],
   },
   {
     id: 'approvals',
     label: 'Approvals',
+    path: '/approvals',
     icon: <CheckCircle className="w-5 h-5" />,
     roles: ['Admin'],
   },
   {
     id: 'admin',
     label: 'User Management',
+    path: '/admin',
     icon: <Users className="w-5 h-5" />,
     roles: ['Admin'],
   },
 ];
 
 export function Sidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const { currentModule, setCurrentModule, sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { sidebarCollapsed, toggleSidebar } = useUIStore();
 
   const visibleNavItems = navItems.filter((item) =>
     user && item.roles.includes(user.role)
   );
+
+  const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
+
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
 
   return (
     <aside
@@ -106,10 +126,10 @@ export function Sidebar() {
         {visibleNavItems.map((item) => (
           <button
             key={item.id}
-            onClick={() => setCurrentModule(item.id)}
+            onClick={() => handleNavigation(item.path)}
             className={classNames(
               'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group',
-              currentModule === item.id
+              isActive(item.path)
                 ? 'bg-blue-600 text-white'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
             )}
@@ -123,7 +143,7 @@ export function Sidebar() {
                 {item.badge}
               </span>
             )}
-            {currentModule === item.id && !sidebarCollapsed && (
+            {isActive(item.path) && !sidebarCollapsed && (
               <span className="ml-auto w-1.5 h-1.5 bg-white rounded-full" />
             )}
           </button>
